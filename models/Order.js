@@ -30,4 +30,4 @@ orderSchema.methods.toJSON = function() {
 }
 
 const Order = mongoose.model("Order", orderSchema);
-moudule.exports = Order;
+module.exports = Order;

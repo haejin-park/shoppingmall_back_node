@@ -28,5 +28,24 @@ userController.createUser = async(req, res) => {
 7. try catch(error)
 */
 
+userController.getUser = async(req, res) => {
+    try {
+        const {userId} = req;
+        const user = await User.findOne({userId});
+        if(!user) throw new Error('can not find user.');
+        res.status(200).json({status:'ok', user});
+    } catch(error) {
+        res.status(400).json({status: 'fail', message: error.message});
+    }
+}
+/*
+내 정보 조회
+1. userId를 req에서 꺼낸다.
+2. db에서 userId로 user를 찾는다
+3. 미존재하면 에러
+4. 존재하면 res 반환
+5. try catch(error)
+*/
+
 module.exports = userController;
 

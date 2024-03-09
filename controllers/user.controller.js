@@ -13,7 +13,7 @@ userController.createUser = async(req, res) => {
         await newUser.save();
         res.status(200).json({status:'ok'});
     } catch(error) {
-        res.send({status: 'fail', message: error.message});
+        res.status(400).json({status: 'fail', message: error.message});
     }
 }
 

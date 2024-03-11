@@ -4,13 +4,14 @@ const productSchema = Schema(
     {
         sku: {type:String, required:true, unique:true},
         name: {type:String, required:true},
+        size: {type:Array, required:true},
         image: {type:String, required:true},
         price: {type:Number, required:true},
         description: {type:String, required:true},
         stock: {type:Object, required:true},
         category: {type:Array, required:true},
         status: {type:String, default:"active"},
-        isDeleted: {type:Boolean, required:true},
+        isDeleted: {type:Boolean, default:false},
     }, 
     {timestamps:true}
 );

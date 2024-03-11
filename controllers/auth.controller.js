@@ -58,4 +58,16 @@ authController.authenticate = async(req, res, next) => {
 8. try catch(error)
 */
 
+authController.checkAdminPermission = async (req,res,next) => {
+    const {userId} = req;
+    const user = await User.findById(userId);
+    req.level = user.level;
+    next();
+}
+
+/* admin여부 확인시 필요한 미들웨어(level)
+userId로 user정보 가져와서 level넘긴다
+*/
+
+
 module.exports = authController;

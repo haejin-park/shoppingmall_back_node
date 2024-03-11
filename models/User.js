@@ -24,7 +24,7 @@ userSchema.methods.toJSON = function() {
 }
 
 userSchema.methods.generateToken = function () {
-    const token = jwt.sign({id:this._id}, JWT_SECRET_KEY, {expiresIn:'1d'});
+    const token = jwt.sign({_id:this._id}, JWT_SECRET_KEY, {expiresIn:'1d'});
     return token;
 }
 

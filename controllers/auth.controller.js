@@ -8,11 +8,12 @@ const authController = {};
 authController.loginWithEmail = async(req, res) => {
     try {
         const {email, password} = req.body;
-        const user = await User.findOne({email});
+        const user = await User.findOne({email}, "-createdAt -updatedAt -__v");
         if(!user) throw new Error('User does not exist.');
         const isMatch = await bcrypt.compare(password, user.password);
         if(!isMatch) throw new Error('The password does not match.');
         const token = user.generateToken();
+        if(!token) throw new Error('Faild to generate token');
         res.status(200).json({status:'ok', user, token});
     } catch(error) {
         res.status(400).json({status: 'fail', message: error.message});

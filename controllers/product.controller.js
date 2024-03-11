@@ -3,9 +3,6 @@ const Product = require('../models/Product');
 
 productController.createProduct = async(req, res) => {
     try {
-        const {level} =  req;
-        console.log('level', level);
-        if(level !== 'admin') throw new Error('You cannot add a product because you do not have administrator privileges.');
         const { sku,name, size, image, price, description, stock, category, status } = req.body;
         const product = await new Product({sku, name, size, image, price, description, stock, category, status});
         await product.save();
@@ -15,11 +12,28 @@ productController.createProduct = async(req, res) => {
     }
 };
 
+productController.updateProduct = async(req, res) => {
+    try {
+        const productId = req.params.id;
+        const { sku,name, size, image, price, description, stock, category, status } = req.body;
+        const product = await Product.findByIdAndUpdate(
+            {sku:productId}, 
+            {sku, name, size, image, price, description, stock, category, status},
+            {new:true}
+        );
+        if(!product) throw new Erorr('The product does not exist.')
+        await product.save();
+        res.status(200).json({status: 'ok', product});
+    } catch (error) {
+        res.status(400).json({status: 'fail', message: error.message});
+    }
+};
+
 productController.getProducts = async(req, res) => {
     try {
-        const productList = await Product.find({});
-        if(!productList) throw new Error('상품이 존재하지 않습니다.');
-        res.status(200).json({status: 'ok', productList});
+        const products = await Product.find({});
+        if(!products) throw new Erorr('The product does not exist.')
+        res.status(200).json({status: 'ok', products});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});
     }

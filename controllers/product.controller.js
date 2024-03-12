@@ -39,4 +39,48 @@ productController.getProducts = async(req, res) => {
     }
 };
 
+productController.checkStock = async(item) => {
+    console.log('item',item);
+    const product = await Product.findById(item.productId);
+    console.log('product', product);
+    if(product.stock[item.size] < item.qty) {
+        return {isVerify: false, message: `${product.name}의 ${item.size}의 재고가 부족합니다.`};
+    }
+    const newStock = {...product.stock}; 
+    newStock[item.size] -= item.qty;
+    product.stock = newStock;
+    await product.save(); 
+    return {isVerify: true};
+}
+
+/*
+받아올거 => 주문 상품
+리턴할거 => 상품 재고 상태, 메세지
+내가 사려는 상품 찾기
+상품 재고(키값이 사이즈)가 주문한 아이템 수량보다 적으면 상태와 메세지와 반환(팝업 보여줄거)
+상품 재고(키값이 사이즈)가 주문한 아이템 수량보다 많으면 재고 빼주기(새 재고 배열만들어서 빼고 다시 기존 배열에 할당)
+*/
+
+productController.checkItemListStock = async(itemList) => {
+    let inSufficientStockItem = [];
+    await Promise.all(itemList.map(async(item) => {           
+        const stockCheck = await productController.checkStock(item);
+        console.log('stockCheck',stockCheck);
+        if(!stockCheck.isVerify) {
+            return inSufficientStockItem.push({item, message:stockCheck.message});
+        }
+        return stockCheck;
+    }));
+    return inSufficientStockItem;
+} 
+/*
+받아올거 => 주문 상품 리스트
+리턴할거 => 재고 부족 아이템 저장할 배열 inSufficientStockItem
+itemList받아와서 map돌리기
+재고 상태 확인 checkStock 
+상품 재고 없으면(stockCheck.isVerify) 재고부족상품배열에 item, stockCheck.message넣어주기
+비동기처리한것들 promise.all로 감싸주기
+배열 리턴
+*/
+
 module.exports = productController;

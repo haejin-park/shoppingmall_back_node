@@ -35,4 +35,25 @@ cartController.addItemToCart = async(req, res) => {
     }
 };
 
+cartController.getCart = async(req, res) => {
+    try {
+        const { userId } = req;
+
+        const cart = await Cart.findOne({userId}).populate({
+            path: 'items',
+            populate: {
+                path: 'productId',
+                model: 'Product',
+            } 
+        });
+
+        await cart.save();
+        return res.status(200).json({ status: 'ok', cartItems: cart.items });
+
+    } catch (error) {
+        res.status(400).json({status: 'fail', message: error.message});
+    }
+};
+
+
 module.exports = cartController;

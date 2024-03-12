@@ -62,16 +62,15 @@ authController.checkAdminPermission = async (req,res,next) => {
     try {
         const {userId} = req;
         const user = await User.findById(userId);
-        if(user.level !== 'admin') throw new Error('You cannot add a product because you do not have administrator privileges.');
+        if(user.level !== 'admin') throw new Error('You cannot use this feature. Because you do not have administrator privileges.');
         next();
     } catch(error) {
         res.status(400).json({status:'fail', message:error.message});
     }
 }
 
-/* admin여부 확인시 필요한 미들웨어(level)
-userId로 user정보 가져와서 level넘긴다
+/* 
+admin여부 확인시 필요한 미들웨어(level)
+userId로 user정보 가져와서 level에 따른 처리
 */
-
-
 module.exports = authController;

@@ -11,7 +11,7 @@ const orderSchema = Schema(
         status: {type:Boolean, required:true},
         items: [
             {
-                ProductId: {type:mongoose.ObjectId, required:true, ref: Product},
+                productId: {type:mongoose.ObjectId, required:true, ref: Product},
                 qty: {type:Number, default:1, required:true},
                 size: {type:String, required:true},
                 price: {type:Number, require:true}

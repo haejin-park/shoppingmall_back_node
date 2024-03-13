@@ -5,6 +5,6 @@ const cartController = require('../controllers/cart.controller');
 
 const router = express.Router();
 
-router.post('/', authController.authenticate, orderController.createOrder, cartController.deleteOrderProduct);
+router.post('/', authController.authenticate, orderController.createOrder, cartController.deleteOrderItems);
 
 module.exports = router;

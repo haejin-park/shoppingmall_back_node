@@ -48,7 +48,7 @@ cartController.getCart = async(req, res) => {
     }
 };
 
-cartController.deleteOrderProduct = async(req,res) => {
+cartController.deleteOrderItems = async(req,res) => {
     try {
         const {userId, orderList, orderNum} = req;
         const cart = await Cart.findOne({userId});
@@ -75,11 +75,12 @@ cartController.deleteOrderProduct = async(req,res) => {
         res.status(400).json({status: 'fail', message: error.message});
     }
 }
+
 /*
 order후 카트 비우기
 받을거 => userId, orderList, orderNum
 userId에 해당하는 카트 찾기
-orderList 상품과 일치하는 카트 상품이 있을 경우 
+orderList 상품과 일치하는 카트 상품이 있을 경우
 카트 수량이 더 많으면 수량 감소, 
 카트 수량이 같으면 item 삭제 
 orderList 상품과 일치하는 카트 상품이 없을 경우 구분값 사용하여 에러처리 

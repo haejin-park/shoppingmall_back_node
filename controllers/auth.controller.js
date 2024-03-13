@@ -1,8 +1,10 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const {OAuth2Client} = require('google-auth-library');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const jwt  =  require ( 'jsonwebtoken' ) ; 
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const authController = {};
 
 authController.loginWithEmail = async(req, res) => {
@@ -12,7 +14,7 @@ authController.loginWithEmail = async(req, res) => {
         if(!user) throw new Error('User does not exist.');
         const isMatch = await bcrypt.compare(password, user.password);
         if(!isMatch) throw new Error('The password does not match.');
-        const token = user.generateToken();
+        const token = await user.generateToken();
         if(!token) throw new Error('Faild to generate token');
         res.status(200).json({status:'ok', user, token});
     } catch(error) {
@@ -30,6 +32,41 @@ authController.loginWithEmail = async(req, res) => {
 6. 비밀번호 존재하면 res 유저 정보 반환
 7. try catch(error)
 */ 
+
+authController.loginWithGoogle = async(req, res) => {
+    try {
+        const {googleToken} = req.body;
+        const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+        const ticket = await googleClient.verifyIdToken({
+            idToken:googleToken,
+            audience: GOOGLE_CLIENT_ID
+        });
+        const {email, name} = ticket.getPayload();
+        // console.log("email, name", email, name);
+        let user = await User.findOne({email}, "-createdAt -updatedAt -__v");
+       
+        if(!user) {
+            const randomPassword = "" + Math.floor(Math.random()*100000000);
+            const salt = await bcrypt.genSalt(10);
+            const newPassword = await bcrypt.hash(randomPassword, salt);
+            user = await new User({email, password:newPassword, name});
+            await user.save();
+        }
+        // console.log("user",user);
+        const token = await user.generateToken();
+        // console.log("token",token);
+        if(!token) throw new Error('Faild to generate token');
+        res.status(200).json({status:'ok', user, token});
+    } catch(error) {
+        res.status(400).json({status: 'fail', message: error.message});
+    }
+}
+
+/*
+백엔드 로그인(토큰 정보로 백엔드에서 로그인해서 유저정보email 받아올 수 있음(google-auth-library))
+    1. 이미 로그인을 한 적이 있는 유저 ⇒ 로그인 시키고 토큰값 주면됨
+    2. 처음 로그인 시도를 한 유저 ⇒ 유저 정보 먼저 새로 생성(유저정보를DB에 저장. password는 랜덤한 값 암호화해서 넣어주기) ⇒ user, 토큰 값
+*/
 
 authController.authenticate = async(req, res, next) => {
     try {

@@ -8,8 +8,8 @@ userController.createUser = async(req, res) => {
         const user = await User.findOne({email});
         if(user) throw new Error('User already exists.');
         const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(password, salt);
-        const newUser = await User.create({email, name, password:hash, level: level? level : "customer"});
+        const newPassword = await bcrypt.hash(password, salt);
+        const newUser = await User.create({email, name, password:newPassword, level: level? level : "customer"});
         await newUser.save();
         res.status(200).json({status:'ok'});
     } catch(error) {

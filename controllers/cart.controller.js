@@ -51,27 +51,23 @@ cartController.getCart = async(req, res) => {
 cartController.deleteOrderProduct = async(req,res) => {
     try {
         const {userId, orderList, orderNum} = req;
-        // console.log('orderList', orderList);
-
         const cart = await Cart.findOne({userId});
-        // console.log('cart', cart);
-
         if(!cart) throw new Error('Cart does not exist.')
-        // 주문 상품과 일치하는 카트 상품리스트 삭제
         let isMatch = false;
-        cart.items.forEach((cartItem) => {
-            orderList.forEach((orderItem) => {
+        for(let i = cart.items.length -1; i >= 0; i--){
+            let cartItem = cart.items[i];
+            for(let j = 0; j < orderList.length; j++){
+                let orderItem = orderList[j];
                 if(cartItem.productId.equals(orderItem.productId) && cartItem.size === orderItem.size) {
                     isMatch = true;
                     if(cartItem.qty > orderItem.qty) {
                         cartItem.qty -= orderItem.qty;
                     } else {    
-                        const index = cart.items.indexOf(cartItem);
-                        cart.items.splice(index, 1);
+                        cart.items.splice(i, 1);
                     }
                 } 
-            });             
-        });
+            }
+        }
         if(!isMatch) throw new Error('There are no items in the cart that match the ordered item.');
         await cart.save();
         return res.status(200).json({ status: 'ok', orderNum});

@@ -42,7 +42,6 @@ authController.loginWithGoogle = async(req, res) => {
             audience: GOOGLE_CLIENT_ID
         });
         const {email, name} = ticket.getPayload();
-        // console.log("email, name", email, name);
         let user = await User.findOne({email}, "-createdAt -updatedAt -__v");
        
         if(!user) {
@@ -52,9 +51,7 @@ authController.loginWithGoogle = async(req, res) => {
             user = await new User({email, password:newPassword, name});
             await user.save();
         }
-        // console.log("user",user);
         const token = await user.generateToken();
-        // console.log("token",token);
         if(!token) throw new Error('Faild to generate token');
         res.status(200).json({status:'ok', user, token});
     } catch(error) {
@@ -64,8 +61,8 @@ authController.loginWithGoogle = async(req, res) => {
 
 /*
 백엔드 로그인(토큰 정보로 백엔드에서 로그인해서 유저정보email 받아올 수 있음(google-auth-library))
-    1. 이미 로그인을 한 적이 있는 유저 ⇒ 로그인 시키고 토큰값 주면됨
-    2. 처음 로그인 시도를 한 유저 ⇒ 유저 정보 먼저 새로 생성(유저정보를DB에 저장. password는 랜덤한 값 암호화해서 넣어주기) ⇒ user, 토큰 값
+    1. 이미 로그인을 한 적이 있는 유저 ⇒ user, token 전달
+    2. 처음 로그인 시도를 한 유저 ⇒ 유저 정보 먼저 새로 생성(유저정보를DB에 저장. password는 랜덤한 값 암호화해서 넣어주기) ⇒ user, token 전달
 */
 
 authController.authenticate = async(req, res, next) => {

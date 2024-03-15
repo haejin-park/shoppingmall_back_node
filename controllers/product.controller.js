@@ -3,7 +3,7 @@ const Product = require('../models/Product');
 
 productController.createProduct = async(req, res) => {
     try {
-        const { sku,name, size, image, price, description, stock, category, status } = req.body;
+        const { sku, name, size, image, price, description, stock, category, status } = req.body.formData;
         const product = await new Product({sku, name, size, image, price, description, stock, category, status});
         await product.save();
         res.status(200).json({status: 'ok'});

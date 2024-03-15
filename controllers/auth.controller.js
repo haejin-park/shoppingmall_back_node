@@ -11,11 +11,11 @@ authController.loginWithEmail = async(req, res) => {
     try {
         const {email, password} = req.body;
         const user = await User.findOne({email}, "-createdAt -updatedAt -__v");
-        if(!user) throw new Error('User does not exist.');
+        if(!user) throw new Error('사용자가 존재하지 않습니다.');
         const isMatch = await bcrypt.compare(password, user.password);
-        if(!isMatch) throw new Error('The password does not match.');
+        if(!isMatch) throw new Error('비밀 번호가 일치하지 않습니다.');
         const token = await user.generateToken();
-        if(!token) throw new Error('Faild to generate token');
+        if(!token) throw new Error('토큰 생성에 실패하였습니다.');
         res.status(200).json({status:'ok', user, token});
     } catch(error) {
         res.status(400).json({status: 'fail', message: error.message});
@@ -52,7 +52,7 @@ authController.loginWithGoogle = async(req, res) => {
             await user.save();
         }
         const token = await user.generateToken();
-        if(!token) throw new Error('Faild to generate token');
+        if(!token) throw new Error('토큰 생성에 실패하였습니다.');
         res.status(200).json({status:'ok', user, token});
     } catch(error) {
         res.status(400).json({status: 'fail', message: error.message});
@@ -68,10 +68,10 @@ authController.loginWithGoogle = async(req, res) => {
 authController.authenticate = async(req, res, next) => {
     try {
         const tokenString = req.headers.authorization;
-        if(!tokenString) throw new Error('The token could not be found.');
+        if(!tokenString) throw new Error('헤더에 저장된 토큰을 찾을 수 없습니다.');
         const token = tokenString.replace('Bearer ','');
         jwt.verify(token, JWT_SECRET_KEY, (error, payload) => {
-            if(error) throw new Error('The token is invalid.');
+            if(error) throw new Error('토큰이 유효하지 않습니다.');
             req.userId = payload._id;
         });
         next();
@@ -96,7 +96,7 @@ authController.checkAdminPermission = async (req,res,next) => {
     try {
         const {userId} = req;
         const user = await User.findById(userId);
-        if(user.level !== 'admin') throw new Error('You cannot use this feature. Because you do not have administrator privileges.');
+        if(user.level !== 'admin') throw new Error('관리자 권한이 없어 해당 기능을 사용할 수 없습니다.');
         next();
     } catch(error) {
         res.status(400).json({status:'fail', message:error.message});

@@ -21,7 +21,7 @@ productController.updateProduct = async(req, res) => {
             {sku, name, size, image, price, description, stock, category, status},
             {new:true}
         );
-        if(!product) throw new Erorr('The product does not exist.')
+        if(!product) throw new Erorr('상품이 존재하지 않습니다.')
         await product.save();
         res.status(200).json({status: 'ok', product});
     } catch (error) {
@@ -32,17 +32,29 @@ productController.updateProduct = async(req, res) => {
 productController.getProducts = async(req, res) => {
     try {
         const products = await Product.find({});
-        if(!products) throw new Erorr('The product does not exist.')
+        if(!products) throw new Erorr('상품이 존재하지 않습니다.')
         res.status(200).json({status: 'ok', products});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});
     }
 };
 
+productController.getProduct = async(req, res) => {
+    try {
+        const id = req.params.id;
+        const product = await Product.findById(id);
+        if(!product) throw new Erorr('상품이 존재하지 않습니다.')
+        res.status(200).json({status: 'ok', product});
+    } catch (error) {
+        res.status(400).json({status: 'fail', message: error.message});
+    }
+};
+
+
 productController.checkStock = async(item) => {
     const product = await Product.findById(item.productId);
     if(product.stock[item.size] < item.qty) {
-        return {isVerify: false, message: `${product.name}in ${item.size}is out of stock.`};
+        return {isVerify: false, message: `${product.name}의 ${item.size}사이즈 재고가 부족합니다.`};
     }
     const newStock = {...product.stock}; 
     newStock[item.size] -= item.qty;

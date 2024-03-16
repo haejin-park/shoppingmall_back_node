@@ -31,7 +31,11 @@ productController.updateProduct = async(req, res) => {
 
 productController.getProducts = async(req, res) => {
     try {
-        const products = await Product.find({});
+        const {page, name} = req.query;
+        // console.log('name', name);
+        const condition = name? {name: {$regex:name, $options:"i"}}: {};
+        let query = Product.find(condition);
+        const  products = await query.exec();
         if(!products) throw new Erorr('상품이 존재하지 않습니다.')
         res.status(200).json({status: 'ok', products});
     } catch (error) {

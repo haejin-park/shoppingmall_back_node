@@ -5,6 +5,7 @@ productController.createProduct = async(req, res) => {
     try {
         const { sku, name, size, image, price, description, stock, category, status } = req.body.formData;
         const product = await new Product({sku, name, size, image, price, description, stock, category, status});
+        if(!product) throw new Erorr('상품 생성에 실패하였습니다.')
         await product.save();
         res.status(200).json({status: 'ok'});
     } catch (error) {
@@ -108,6 +109,7 @@ itemList받아와서 map돌리기
 productController.deleteProduct = async(req, res) => {
     try {
         const _id = req.params.id;
+        const {page, name} = req.query;
         const product = await Product.findByIdAndUpdate(
             {_id}, 
             {isDeleted:true},

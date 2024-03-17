@@ -1,6 +1,5 @@
 const productController = {};
 const Product = require('../models/Product');
-
 productController.createProduct = async(req, res) => {
     try {
         const { sku, name, size, image, price, description, stock, category, status } = req.body.formData;
@@ -29,15 +28,23 @@ productController.updateProduct = async(req, res) => {
     }
 };
 
-productController.getProducts = async(req, res) => {
+productController.getProductList = async(req, res) => {
     try {
         const {page, name} = req.query;
-        // console.log('name', name);
         const condition = name? {name: {$regex:name, $options:"i"}}: {};
         let query = Product.find(condition);
-        const  products = await query.exec();
-        if(!products) throw new Erorr('상품이 존재하지 않습니다.')
-        res.status(200).json({status: 'ok', products});
+        let totalPageNum = 1;
+        if(page){
+            const PAGE_SIZE = 8 
+            //생략할 수, 최대 보여줄 수
+            query.skip((page - 1)* PAGE_SIZE).limit(8)
+             //최종 몇개의 페이지 = 전체 데이터 개수 / PAGE_SIZE
+            const totalItemNum = await Product.find(condition).count(); 
+            totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
+        }
+        const productList = await query.exec();
+        if(!productList) throw new Erorr('상품이 존재하지 않습니다.')
+        res.status(200).json({status: 'ok', productList, totalPageNum});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});
     }

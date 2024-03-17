@@ -1,4 +1,5 @@
 const productController = {};
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 productController.createProduct = async(req, res) => {
     try {
@@ -13,10 +14,10 @@ productController.createProduct = async(req, res) => {
 
 productController.updateProduct = async(req, res) => {
     try {
-        const productId = req.params.id;
-        const { sku,name, size, image, price, description, stock, category, status } = req.body;
+        const _id = req.params.id
+        const { sku,name, size, image, price, description, stock, category, status } = req.body.formData;
         const product = await Product.findByIdAndUpdate(
-            {sku:productId}, 
+            {_id}, 
             {sku, name, size, image, price, description, stock, category, status},
             {new:true}
         );

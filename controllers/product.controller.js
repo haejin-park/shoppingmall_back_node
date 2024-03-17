@@ -21,9 +21,9 @@ productController.updateProduct = async(req, res) => {
             {sku, name, size, image, price, description, stock, category, status},
             {new:true}
         );
-        if(!product) throw new Erorr('상품이 존재하지 않습니다.')
+        if(!product) throw new Erorr('상품 정보 수정 및 조회에 실패하였습니다.')
         await product.save();
-        res.status(200).json({status: 'ok', product});
+        res.status(200).json({status: 'ok'});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});
     }
@@ -33,6 +33,7 @@ productController.getProductList = async(req, res) => {
     try {
         const {page, name} = req.query;
         const condition = name? {name: {$regex:name, $options:"i"}}: {};
+        condition.isDeleted = false;
         let query = Product.find(condition);
         let totalPageNum = 1;
         if(page){
@@ -44,7 +45,7 @@ productController.getProductList = async(req, res) => {
             totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
         }
         const productList = await query.exec();
-        if(!productList) throw new Erorr('상품이 존재하지 않습니다.')
+        if(productList.length === 0) throw new Erorr('조회된 상품이 없습니다.')
         res.status(200).json({status: 'ok', productList, totalPageNum});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});
@@ -55,7 +56,7 @@ productController.getProduct = async(req, res) => {
     try {
         const id = req.params.id;
         const product = await Product.findById(id);
-        if(!product) throw new Erorr('상품이 존재하지 않습니다.')
+        if(!product) throw new Erorr('조회된 상품이 없습니다.')
         res.status(200).json({status: 'ok', product});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});
@@ -103,5 +104,21 @@ itemList받아와서 map돌리기
 비동기처리한것들 promise.all로 감싸주기
 배열 리턴
 */
+
+productController.deleteProduct = async(req, res) => {
+    try {
+        const _id = req.params.id;
+        const product = await Product.findByIdAndUpdate(
+            {_id}, 
+            {isDeleted:true},
+            {new:true}
+        );
+        if(!product) throw new Erorr('상품 삭제 및 조회에 실패하였습니다.')
+        await product.save();
+        res.status(200).json({status: 'ok'});
+    } catch (error) {
+        res.status(400).json({status: 'fail', message: error.message});
+    }
+};
 
 module.exports = productController;

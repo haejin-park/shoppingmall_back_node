@@ -7,5 +7,6 @@ router.post('/',authController.authenticate, authController.checkAdminPermission
 router.put('/:id',authController.authenticate, authController.checkAdminPermission, productController.updateProduct);
 router.get('/', productController.getProductList);
 router.get('/:id', productController.getProduct);
+router.put('/delete/:id',authController.authenticate, authController.checkAdminPermission, productController.deleteProduct);
 
 module.exports = router;

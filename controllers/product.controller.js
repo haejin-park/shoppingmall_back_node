@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const Product = require('../models/Product');
 productController.createProduct = async(req, res) => {
     try {
-        const { sku, name, size, image, price, description, stock, category, status } = req.body.formData;
+        console.log('req.body', req.body);
+        const { sku, name, size, image, price, description, stock, category, status } = req.body;
         const product = await new Product({sku, name, size, image, price, description, stock, category, status});
         if(!product) throw new Erorr('상품 생성에 실패하였습니다.')
         await product.save();
@@ -16,7 +17,7 @@ productController.createProduct = async(req, res) => {
 productController.updateProduct = async(req, res) => {
     try {
         const _id = req.params.id
-        const { sku,name, size, image, price, description, stock, category, status } = req.body.formData;
+        const { sku,name, size, image, price, description, stock, category, status } = req.body;
         const product = await Product.findByIdAndUpdate(
             {_id}, 
             {sku, name, size, image, price, description, stock, category, status},

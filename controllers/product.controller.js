@@ -30,13 +30,13 @@ productController.updateProduct = async(req, res) => {
     }
 };
 
-// 내림차순 정렬
 productController.getProductList = async(req, res) => {
     try {
-        const {page, name} = req.query;
+        const {page, name, latestStatus} = req.query;
         const condition = name? {name: {$regex:name, $options:"i"}}: {};
         condition.isDeleted = false;
         let query = Product.find(condition);
+        if(latestStatus) query = query.sort({createdAt: -1});
         let totalPageNum = 1;
         if(page){
             const PAGE_SIZE = 8 
@@ -89,7 +89,6 @@ productController.checkItemListStock = async(itemList) => {
 productController.deleteProduct = async(req, res) => {
     try {
         const _id = req.params.id;
-        const {page, name} = req.query;
         const product = await Product.findByIdAndUpdate(
             {_id}, 
             {isDeleted:true},

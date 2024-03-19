@@ -17,17 +17,6 @@ userController.createUser = async(req, res) => {
     }
 }
 
-/*
-회원가입
-1. front에서 받은 정보를 req.body에서 꺼낸다.
-2. db에 저장하기 전에 이미 존재하진 않는지 확인
-3. 존재하면 에러
-4. 미존재 하면 암호화 
-5. 유저 생성(유저 정보, 암호화된 비밀번호 저장, 레벨은 선택값) -> 저장
-6. res
-7. try catch(error)
-*/
-
 userController.getUser = async(req, res) => {
     try {
         const {userId} = req;
@@ -38,14 +27,6 @@ userController.getUser = async(req, res) => {
         res.status(400).json({status: 'fail', message: error.message});
     }
 }
-/*
-내 정보 조회
-1. userId를 req에서 꺼낸다.
-2. db에서 userId로 user를 찾는다
-3. 미존재하면 에러
-4. 존재하면 res 반환
-5. try catch(error)
-*/
 
 module.exports = userController;
 

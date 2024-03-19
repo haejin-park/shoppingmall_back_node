@@ -35,15 +35,6 @@ cartController.addItemToCart = async(req, res) => {
         res.status(400).json({status: 'fail', message: error.message});
     }
 };
-/*
-size, qty는 selectedOptionObj라는 객체로 받는다. selectedOptionObj ex) {S:1, M:2}
-장바구니가 없으면 장바구니 생성
-selectedOptionObj를 반복 돌려서 key값(size)과 value(qty)를 뽑아내고
-Map에 productId와 size를 넣은 새로운 키와 qty를 넣은 값을 만든다
-cart.items를 반복 돌려 productId와 size로 새로운 키를 만든다 
-두 키가 일치하면 isMatch true, 수량 증가 
-일치하지 않으면 상품 추가
-*/
 
 cartController.getCart = async(req, res) => {
     try {
@@ -97,19 +88,5 @@ cartController.deleteOrderItems = async(req,res) => {
         res.status(400).json({status: 'fail', message: error.message});
     }
 }
-
-/*
-order후 카트 비우기
-받을거 => userId, orderList, orderNum
-userId에 해당하는 카트 찾기
-orderList를 반복 돌려서 key값(size)과 value(qty)를 뽑아내고
-Map에 productId와 size를 넣은 새로운 키와 qty를 넣은 값을 만든다
-cart.Items 역순 반복 돌려서 productId와 size를 넣은 키를 만든다
-두 키가 일치하면(orderList 상품과 일치하는 카트 상품이 있을 경우)
-카트 수량이 더 많으면 수량 감소, 
-카트 수량이 같으면 item 삭제 
-orderList 상품과 일치하는 카트 상품이 없을 경우 구분값 사용하여 에러처리 
-카트 저장
-*/ 
 
 module.exports = cartController;

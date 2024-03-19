@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const Product = require('../models/Product');
 productController.createProduct = async(req, res) => {
     try {
-        console.log('req.body', req.body);
         const { sku, name, size, image, price, description, stock, category, status } = req.body;
         const product = await new Product({sku, name, size, image, price, description, stock, category, status});
         if(!product) throw new Erorr('상품 생성에 실패하였습니다.')
@@ -34,6 +33,7 @@ productController.updateProduct = async(req, res) => {
 productController.getProductList = async(req, res) => {
     try {
         const {page, name} = req.query;
+        // console.log('req.query', req.query);
         const condition = name? {name: {$regex:name, $options:"i"}}: {};
         condition.isDeleted = false;
         let query = Product.find(condition);
@@ -47,7 +47,6 @@ productController.getProductList = async(req, res) => {
             totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
         }
         const productList = await query.exec();
-        if(productList.length === 0) throw new Erorr('조회된 상품이 없습니다.')
         res.status(200).json({status: 'ok', productList, totalPageNum});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});

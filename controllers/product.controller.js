@@ -30,22 +30,31 @@ productController.updateProduct = async(req, res) => {
     }
 };
 
+/*블라우스 2개인데 2페이지에서 블라우스 검색 시 8개 skip되서 조회된 상품 없다고 나오는 문제 해결 
+  =>skipAmount보다 클 떄만 skip */
 productController.getProductList = async(req, res) => {
     try {
-        const {page, name, latestStatus} = req.query;
-        const condition = name? {name: {$regex:name, $options:"i"}}: {};
+        let {currentPage, searchKeyword, sortBy} = req.query;
+        const condition = searchKeyword? {name: {$regex:searchKeyword, $options:"i"}}: {};
         condition.isDeleted = false;
         let query = Product.find(condition);
-        if(latestStatus) query = query.sort({createdAt: -1});
+        if(sortBy === 'latest') query = query.sort({createdAt: -1});
+        // // if(sortBy === 'orderOfPurchase') order페이지 완성 후 진행
         let totalPageNum = 1;
-        if(page){
+        if(currentPage){
+            const totalItemNum = await Product.find(condition).countDocuments();
             const PAGE_SIZE = 8 
-            query.skip((page - 1)* PAGE_SIZE).limit(8)
-            const totalItemNum = await Product.find(condition).count(); 
+            const skipAmount = (currentPage - 1)* PAGE_SIZE;
+            if(totalItemNum > skipAmount) {
+                query = query.skip(skipAmount).limit(PAGE_SIZE)
+            } else {
+                currentPage = 1
+            } 
             totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
+
         }
-        const productList = await query.exec();
-        res.status(200).json({status: 'ok', productList, totalPageNum});
+        let productList = await query.exec();
+        res.status(200).json({status: 'ok', productList, totalPageNum, currentPage});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});
     }

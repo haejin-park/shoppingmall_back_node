@@ -10,6 +10,7 @@ const cartSchema = Schema(
                 productId: {type:mongoose.ObjectId, ref:Product},
                 size: {type:String, required:true},
                 qty: {type:Number, default:1, required:true},
+                itemCreatedAt: {type: Date, default: Date.now}
             },
         ],
     }, 

@@ -102,6 +102,17 @@ cartController.getCart = async(req, res) => {
     }
 };
 
+cartController.getCartItemCount = async(req,res) => {
+    try {
+        const {userId} = req;
+        const cart = await Cart.findOne({userId});
+        if(!cart) throw new Error('장바구니가 존재하지 않습니다.');
+        return res.status(200).json({status: 'ok', cartItemCount: cart.items.length});
+    } catch(error) {
+        return res.status(400).json({status: 'fail', message:error.message});
+    }
+}
+
 cartController.deleteCartItem = async(req,res) => {
     try {
         const {userId} = req;

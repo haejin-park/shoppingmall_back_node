@@ -1,11 +1,10 @@
-const { default: mongoose } = require("mongoose");
-const { Types } = mongoose;
+const { mongoose } = require("mongoose");
 const Cart = require("../models/Cart");
 const cartController = {};
 cartController.addCartItem = async(req, res) => {
     try {
         const { userId } = req;
-        const { productId, selectedOptionObj } = req.body;
+        const { productId, selectedOptionObj, mode } = req.body;
         let cart = await Cart.findOne({userId});
         if(!cart) cart = new Cart({userId});
         let message = '';
@@ -32,6 +31,7 @@ cartController.addCartItem = async(req, res) => {
             }
         }
         await cart.save();
+        if(mode === "edit") message = "장바구니 상품 옵션이 변경되었습니다.";
         return res.status(200).json({ status: 'ok', message, cartItemCount: cart.items.length });
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});
@@ -51,12 +51,12 @@ cartController.addCartItem = async(req, res) => {
 한 페이지 보여줄 아이템 갯수, 생략할 갯수, 총 페이지 수
 한 화면에 8개씩 나오게 skipAmount보다 클 때만 skip, limit적용 후 aggregate
 */
-cartController.getCart = async(req, res) => {
+cartController.getCartList = async(req, res) => {
     try {
         const { userId } = req;
         let { currentPage, searchKeyword } = req.query;
         let totalPipeline = [
-            { $match: { userId: new Types.ObjectId(userId) } },
+            { $match: { userId: new mongoose.Types.ObjectId(userId) } },
             { $unwind: "$items" },
             { $project:{"items":1} },
             { $lookup: {
@@ -117,8 +117,7 @@ cartController.deleteCartItem = async(req,res) => {
     try {
         const {userId} = req;
         let _id = req.params.id;
-        _id = new Types.ObjectId(_id);
-
+        _id = new mongoose.Types.ObjectId(_id);
         const cart = await Cart.findOneAndUpdate(
             {userId, "items._id":_id}, 
             {$pull: {items:{_id}}}, 
@@ -181,7 +180,6 @@ cartController.updateCartItemQty = async(req, res) => {
         const { productId, selectedOptionObj } = req.body;
         let cart = await Cart.findOne({userId});
         if(!cart) cart = new Cart({userId});
-        let message = '';
 
         let selectedMap = new Map();
         for(const size of Object.keys(selectedOptionObj)){
@@ -194,17 +192,16 @@ cartController.updateCartItemQty = async(req, res) => {
             if(selectedMap.has(key)){
                 isMatch = true
                 let selectedQty = selectedMap.get(key);
-                item.qty = selectedQty;
-                message = '헤당 상품의 수량이 업데이트 되었습니다.';   
+                item.qty = selectedQty; 
             }
         });
         if(!isMatch) {
             for(const size of Object.keys(selectedOptionObj)){
                 cart.items = [...cart.items, {productId, size, qty:selectedOptionObj[size]}];
-                message = "장바구니에 해당 상품을 추가하였습니다.";
             }
         }
         await cart.save();
+        let message = "장바구니 상품 옵션이 변경되었습니다.";
         return res.status(200).json({ status: 'ok', message, cartItemCount: cart.items.length });
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});

@@ -4,7 +4,7 @@ const cartController = {};
 cartController.addCartItem = async(req, res) => {
     try {
         const { userId } = req;
-        const { productId, selectedOptionObj, mode } = req.body;
+        const { productId, selectedOptionObj } = req.body;
         let cart = await Cart.findOne({userId});
         if(!cart) cart = new Cart({userId});
         let message = '';
@@ -31,7 +31,6 @@ cartController.addCartItem = async(req, res) => {
             }
         }
         await cart.save();
-        if(mode === "edit") message = "장바구니 상품 옵션이 변경되었습니다.";
         return res.status(200).json({ status: 'ok', message, cartItemCount: cart.items.length });
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});
@@ -113,16 +112,21 @@ cartController.getCartItemCount = async(req,res) => {
     }
 }
 
+cartController.deleteItem = async(userId, _id) => {
+    _id = new mongoose.Types.ObjectId(_id);
+    const cart = await Cart.findOneAndUpdate(
+        {userId, "items._id":_id}, 
+        {$pull: {items:{_id}}}, 
+        {new:true}
+    );
+    return cart;
+}
+
 cartController.deleteCartItem = async(req,res) => {
     try {
         const {userId} = req;
         let _id = req.params.id;
-        _id = new mongoose.Types.ObjectId(_id);
-        const cart = await Cart.findOneAndUpdate(
-            {userId, "items._id":_id}, 
-            {$pull: {items:{_id}}}, 
-            {new:true}
-        );
+        const cart = await cartController.deleteItem(userId, _id);
         if(!cart) throw new Error('장바구니가 존재하지 않습니다.');
         return res.status(200).json({ status: 'ok', cartItemCount: cart.items.length});
     } catch (error) {
@@ -173,39 +177,51 @@ cartController.deleteOrderItems = async(req,res) => {
     }
 }
 
-//나중에 업데이트한 상품 이름도 붙여주기
 cartController.updateCartItemQty = async(req, res) => {
     try {
         const { userId } = req;
-        const { productId, selectedOptionObj } = req.body;
+        const { productId, cartItemInitialOptionObj, selectedOptionObj } = req.body;
         let cart = await Cart.findOne({userId});
         if(!cart) cart = new Cart({userId});
 
-        let selectedMap = new Map();
-        for(const size of Object.keys(selectedOptionObj)){
-            let key = `${productId}_${size}`;
-            selectedMap.set(key, selectedOptionObj[size])
-        }
-        let isMatch = false;
-        cart.items.forEach(item => {
-            let key = `${item.productId.toString()}_${item.size}`;
-            if(selectedMap.has(key)){
-                isMatch = true
-                let selectedQty = selectedMap.get(key);
-                item.qty = selectedQty; 
+        const allKeys = Array.from(new Set([...Object.keys(cartItemInitialOptionObj), ...Object.keys(selectedOptionObj)]));
+        let updatedItems = [];
+        for(const size of allKeys) {
+            const selectedValue = selectedOptionObj[size] || 0;
+            const initialValue = cartItemInitialOptionObj[size] || 0;
+            const itemIndex = cart.items.findIndex(item => item.productId.toString() === productId && item.size === size);
+
+            if(selectedValue > 0 && initialValue === 0) {
+                // 선택한 옵션에만 수량이 있고 초기 옵션에는 수량이 없을 경우
+                if(itemIndex > -1) {
+                    //기존에 장바구니에 아이템이 있으면: 수량 추가
+                    cart.items[itemIndex].qty += selectedValue;
+                } else {
+                    // 기존에 장바구니에 아이템이 없으면: 아이템 추가
+                    updatedItems.push({productId, size, qty: selectedValue});
+                }
+
+            } else if(selectedValue > 0 && selectedValue !== initialValue) {
+                // 선택한 옵션 수량이 있고, 선택 옵션과 초기 옵션 수량이 다른 경우: 수량 수정
+                if(itemIndex > -1) {
+                    cart.items[itemIndex].qty = selectedValue;
+                }
+            } else if(selectedValue === 0 && initialValue > 0) {
+                // 선택한 옵션에는 수량이 없고 초기 옵션에는 수량이 있을 경우: 삭제
+                cart.items = cart.items.filter(item => !(item.productId.toString() === productId && item.size === size));
             }
-        });
-        if(!isMatch) {
-            for(const size of Object.keys(selectedOptionObj)){
-                cart.items = [...cart.items, {productId, size, qty:selectedOptionObj[size]}];
-            }
         }
+
+        // 업데이트된 아이템 추가
+        cart.items = [...cart.items, ...updatedItems];
+
         await cart.save();
-        let message = "장바구니 상품 옵션이 변경되었습니다.";
+        let message = "장바구니 상품의 옵션이 변경되었습니다."
         return res.status(200).json({ status: 'ok', message, cartItemCount: cart.items.length });
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});
     }
 };
+
 
 module.exports = cartController;

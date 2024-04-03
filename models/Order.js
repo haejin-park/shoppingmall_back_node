@@ -8,14 +8,14 @@ const orderSchema = Schema(
         userId: {type:mongoose.ObjectId, required:true, ref: User},
         status: {type:String, default:"preparing"},
         totalPrice: {type:Number, required:true, default: 0},
-        shipTo: {type:String, required:true},
-        contact: {type:String, required:true},
+        shipTo: {type:Object, required:true},
+        contact: {type:Object, required:true},
         orderNum: {type:String},
         items: [
             {
                 productId: {type:mongoose.ObjectId, required:true, ref: Product},
-                qty: {type:Number, default:1, required:true},
                 size: {type:String, required:true},
+                qty: {type:Number, default:1, required:true},
                 price: {type:Number, require:true}
             }
         ],

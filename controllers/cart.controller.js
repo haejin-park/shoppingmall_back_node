@@ -124,7 +124,6 @@ cartController.deleteCartItem = async(req,res) => {
             {$pull: {items:{_id}}}, 
             {new:true}
         );
-        console.log('cart',cart);
         if(!cart) throw new Error('장바구니가 존재하지 않습니다.');
         return res.status(200).json({ status: 'ok', cartItemCount: cart.items.length});
     } catch (error) {
@@ -132,36 +131,44 @@ cartController.deleteCartItem = async(req,res) => {
     }
 }
 
+//장바구니에서 바로 주문시엔 cartOrderStatus true, 상품 디테일 화면에서 바로 주문시엔 false
+//true일 떄만 삭제되게
 cartController.deleteOrderItems = async(req,res) => {
     try {
-        const {userId, orderList, orderNum} = req;
-        const cart = await Cart.findOne({userId});
-        if(!cart) throw new Error('장바구니가 존재하지 않습니다.')
-        let orderMap = new Map();
-        orderList.forEach(orderItem => {
-            let key = `${orderItem.productId}_${orderItem.size}`;
-            orderMap.set(key,orderItem.qty);
-        });
-
-        let isMatch = false;
-        for(let i = cart.items.length -1; i >= 0; i--){
-            let cartItem = cart.items[i];
-            let key = `${cartItem.productId}_${cartItem.size}`;
-
-            if(orderMap.has(key)) {
-                isMatch = true;
-                let orderQty = orderMap.get(key);
-
-                if(cartItem.qty > orderQty) {
-                    cartItem.qty -= orderQty;
-                } else {
-                    cart.items.splice(i, 1);
+        const {userId, orderNum} = req;
+        const {orderList} = req.body.orderData;
+        const cartOrderStatus = req.body.cartOrderStatus;
+        if(cartOrderStatus) {
+            const cart = await Cart.findOne({userId});
+            if(!cart) throw new Error('장바구니가 존재하지 않습니다.')
+            let orderMap = new Map();
+            orderList.forEach(orderItem => {
+                let key = `${orderItem.productId}_${orderItem.size}`;
+                orderMap.set(key,orderItem.qty);
+            });
+    
+            let isMatch = false;
+            for(let i = cart.items.length -1; i >= 0; i--){
+                let cartItem = cart.items[i];
+                let key = `${cartItem.productId}_${cartItem.size}`;
+    
+                if(orderMap.has(key)) {
+                    isMatch = true;
+                    let orderQty = orderMap.get(key);
+    
+                    if(cartItem.qty > orderQty) {
+                        cartItem.qty -= orderQty;
+                    } else {
+                        cart.items.splice(i, 1);
+                    }
                 }
             }
+            if(!isMatch) throw new Error('장바구니에 일치하는 상품이 없습니다.');
+            await cart.save();
+            return res.status(200).json({ status: 'ok', orderNum, cartItemCount: cart.items.length});
+        } else {
+            return res.status(200).json({ status: 'ok', orderNum });
         }
-        if(!isMatch) throw new Error('장바구니에 일치하는 상품이 없습니다.');
-        await cart.save();
-        return res.status(200).json({ status: 'ok', orderNum, cartItemCount: cart.items.length});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});
     }

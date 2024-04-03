@@ -48,7 +48,7 @@ authController.loginWithGoogle = async(req, res) => {
             const randomPassword = "" + Math.floor(Math.random()*100000000);
             const salt = await bcrypt.genSalt(10);
             const newPassword = await bcrypt.hash(randomPassword, salt);
-            user = await new User({email, password:newPassword, name});
+            user = await User.create({email, name, password:newPassword});
             await user.save();
         }
         const token = await user.generateToken();

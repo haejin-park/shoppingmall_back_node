@@ -5,7 +5,7 @@ const orderController = {};
 orderController.createOrder = async(req, res, next) => {
     try {
         const { userId } = req;
-        const { totalPrice, shipTo, contact, orderList } = req.body;
+        const { totalPrice, shipTo, contact, orderList } = req.body.orderData; 
         const inSufficientStockItem = await productController.checkItemListStock(orderList);
         if(inSufficientStockItem.length > 0) {
             const errorMessage = inSufficientStockItem.reduce((total, item)=> (total += item.message, ""))
@@ -13,7 +13,6 @@ orderController.createOrder = async(req, res, next) => {
         } 
         const newOrder = new Order({userId, totalPrice, shipTo, contact, orderNum: randomStringGenerator(), items: orderList});
         await newOrder.save();
-        req.orderList = orderList;
         req.orderNum = newOrder.orderNum;
         next();
     } catch (error) {

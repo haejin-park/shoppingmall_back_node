@@ -105,8 +105,7 @@ cartController.getCartItemCount = async(req,res) => {
     try {
         const {userId} = req;
         const cart = await Cart.findOne({userId});
-        if(!cart) throw new Error('장바구니가 존재하지 않습니다.');
-        return res.status(200).json({status: 'ok', cartItemCount: cart.items.length});
+        return res.status(200).json({status: 'ok', cartItemCount: cart? cart.items.length : 0});
     } catch(error) {
         return res.status(400).json({status: 'fail', message:error.message});
     }
@@ -139,17 +138,18 @@ cartController.deleteCartItem = async(req,res) => {
 cartController.deleteOrderItems = async(req,res) => {
     try {
         const {userId, orderNum} = req;
-        const {orderList} = req.body.orderData;
-        const cartOrderStatus = req.body.cartOrderStatus;
+        const {orderList,cartOrderStatus} = req.body;
+
         if(cartOrderStatus) {
             const cart = await Cart.findOne({userId});
             if(!cart) throw new Error('장바구니가 존재하지 않습니다.')
             let orderMap = new Map();
-            orderList.forEach(orderItem => {
-                let key = `${orderItem.productId}_${orderItem.size}`;
-                orderMap.set(key,orderItem.qty);
+            const itemList = orderList.flatMap(data => data.items);//배열의 배열 구조라서 flatMap사용
+
+            itemList.forEach(item => {
+                let key = `${item.productId}_${item.size}`;
+                orderMap.set(key, item.qty);
             });
-    
             let isMatch = false;
             for(let i = cart.items.length -1; i >= 0; i--){
                 let cartItem = cart.items[i];

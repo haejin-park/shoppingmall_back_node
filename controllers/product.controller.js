@@ -59,7 +59,7 @@ productController.getProductList = async(req, res) => {
     }
 };
 
-productController.getProduct = async(req, res) => {
+productController.getProductDetail = async(req, res) => {
     try {
         const id = req.params.id;
         const product = await Product.findById(id);
@@ -80,10 +80,14 @@ productController.checkStock = async(item) => {
     product.stock = newStock;
     await product.save(); 
     return {isVerify: true};
+
 }
 
-productController.checkItemListStock = async(itemList) => {
+productController.checkItemListStock = async(orderList) => {
     let inSufficientStockItem = [];
+    const itemList = orderList.flatMap(data => data.items); //배열의 배열 구조라서 flatMap사용
+    console.log('itemList',itemList);
+
     await Promise.all(itemList.map(async(item) => {           
         const stockCheck = await productController.checkStock(item);
         if(!stockCheck.isVerify) {

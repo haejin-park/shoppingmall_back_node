@@ -1,23 +1,28 @@
 const mongoose = require("mongoose");
 const User = require("./User");
 const Product = require("./Product");
-const Cart = require("./Cart");
 const Schema = mongoose.Schema;
 const orderSchema = Schema( 
     {
         userId: {type:mongoose.ObjectId, required:true, ref: User},
-        items: [
+        data: [
             {
-                status: {type:String, default:"preparing"},
-                totalPrice: {type:Number, required:true, default: 0},
-                shipTo: {type:Object, required:true},
-                contact: {type:Object, required:true},
-                orderNum: {type:String},
-                productId: {type:mongoose.ObjectId, required:true, ref: Product},
-                size: {type:String, required:true},
-                qty: {type:Number, default:1, required:true},
-                price: {type:Number, require:true},
-                itemCreatedAt: {type: Date, default: Date.now}
+                info: {
+                    totalPrice: {type:Number, required:true, default: 0},
+                    shipTo: {type:Object, required:true},
+                    contact: {type:Object, required:true},
+                    orderNum: {type:String},
+                    itemCreatedAt: {type: Date, default: Date.now}
+                },
+                items: [
+                    {
+                        productId: {type:mongoose.ObjectId, required:true, ref: Product},
+                        size: {type:String, required:true},
+                        qty: {type:Number, default:1, required:true},
+                        price: {type:Number, require:true},
+                        status: {type:String, default:"preparing"}
+                    }
+                ]
             }
         ],
     }, 

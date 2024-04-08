@@ -86,8 +86,6 @@ productController.checkStock = async(item) => {
 productController.checkItemListStock = async(orderList) => {
     let inSufficientStockItem = [];
     const itemList = orderList.flatMap(data => data.items); //배열의 배열 구조라서 flatMap사용
-    console.log('itemList',itemList);
-
     await Promise.all(itemList.map(async(item) => {           
         const stockCheck = await productController.checkStock(item);
         if(!stockCheck.isVerify) {

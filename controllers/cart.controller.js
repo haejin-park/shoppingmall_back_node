@@ -111,21 +111,15 @@ cartController.getCartItemCount = async(req,res) => {
     }
 }
 
-cartController.deleteItem = async(userId, _id) => {
-    _id = new mongoose.Types.ObjectId(_id);
-    const cart = await Cart.findOneAndUpdate(
-        {userId, "items._id":_id}, 
-        {$pull: {items:{_id}}}, 
-        {new:true}
-    );
-    return cart;
-}
-
 cartController.deleteCartItem = async(req,res) => {
     try {
         const {userId} = req;
         let _id = req.params.id;
-        const cart = await cartController.deleteItem(userId, _id);
+        const cart = await Cart.findOneAndUpdate(
+            {userId, "items._id":_id}, 
+            {$pull: {items:{_id}}}, 
+            {new:true}
+        );
         if(!cart) throw new Error('장바구니가 존재하지 않습니다.');
         return res.status(200).json({ status: 'ok', cartItemCount: cart.items.length});
     } catch (error) {

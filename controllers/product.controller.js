@@ -33,9 +33,10 @@ productController.updateProduct = async(req, res) => {
   =>skipAmount보다 클 떄만 skip */
 productController.getProductList = async(req, res) => {
     try {
-        let {currentPage, searchKeyword, sortBy} = req.query;
-        const condition = searchKeyword? {name: {$regex:searchKeyword, $options:"i"}}: {};
-        condition.isDeleted = false;
+        let {searchCategory, searchKeyword, currentPage,  sortBy} = req.query;
+        let condition = {isDeleted : false};
+        if(searchCategory) condition.category = {$in: [searchCategory], $regex:searchCategory, $options:"i"}
+        if(searchKeyword) condition.name = {$regex:searchKeyword, $options:"i"};
         let query = Product.find(condition);
         if(sortBy === 'latest') query = query.sort({createdAt: -1});
         // // if(sortBy === 'orderOfPurchase') order페이지 완성 후 진행

@@ -3,8 +3,10 @@ const Product = require('../models/Product');
 productController.createProduct = async(req, res) => {
     try {
         const { sku, name, size, image, price, description, stock, category, status } = req.body;
+        const skuProduct = await Product.findOne({sku});
+        if(skuProduct) throw new Error('이미 존재하는 sku입니다. sku를 변경해주세요.')
         const product = await new Product({sku, name, size, image, price, description, stock, category, status});
-        if(!product) throw new Erorr('상품 생성에 실패하였습니다.')
+        if(!product) throw new Error('상품 생성에 실패하였습니다.')
         await product.save();
         res.status(200).json({status: 'ok'});
     } catch (error) {
@@ -16,15 +18,19 @@ productController.updateProduct = async(req, res) => {
     try {
         const _id = req.params.id
         const { sku,name, size, image, price, description, stock, category, status } = req.body;
+        const skuProduct = await Product.findOne({sku});
+        if(skuProduct) throw new Error('이미 존재하는 sku입니다. sku를 변경해주세요.')
         const product = await Product.findByIdAndUpdate(
             {_id}, 
             {sku, name, size, image, price, description, stock, category, status},
             {new:true}
         );
-        if(!product) throw new Erorr('상품 정보 수정 및 조회에 실패하였습니다.')
+        if(!product) throw new Error('상품 정보 수정 및 조회에 실패하였습니다.')
         await product.save();
         res.status(200).json({status: 'ok'});
     } catch (error) {
+        console.log('error',error);
+        console.log('error.message',error.message);
         res.status(400).json({status: 'fail', message: error.message});
     }
 };
@@ -64,7 +70,7 @@ productController.getProductDetail = async(req, res) => {
     try {
         const id = req.params.id;
         const product = await Product.findById(id);
-        if(!product) throw new Erorr('조회된 상품이 없습니다.')
+        if(!product) throw new Error('조회된 상품이 없습니다.')
         res.status(200).json({status: 'ok', product});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});
@@ -105,7 +111,7 @@ productController.deleteProduct = async(req, res) => {
             {isDeleted:true},
             {new:true}
         );
-        if(!product) throw new Erorr('상품 삭제 및 조회에 실패하였습니다.')
+        if(!product) throw new Error('상품 삭제 및 조회에 실패하였습니다.')
         await product.save();
         res.status(200).json({status: 'ok'});
     } catch (error) {

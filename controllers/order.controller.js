@@ -131,7 +131,7 @@ orderController.getOrderDetail = async(req, res) => {
     try {
         const id = req.params.id;
         const order = await Order.findById(id);
-        if(!order) throw new Erorr('조회된 주문이 없습니다.')
+        if(!order) throw new Error('조회된 주문이 없습니다.')
         res.status(200).json({status: 'ok', order});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});
@@ -158,7 +158,7 @@ orderController.updateOrder = async(req, res) => {
             );   
         }
 
-        if(!order)  throw new Erorr('주문 상태 수정 및 조회에 실패하였습니다.');
+        if(!order)  throw new Error('주문 상태 수정 및 조회에 실패하였습니다.');
         res.status(200).json({status: 'ok'});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});

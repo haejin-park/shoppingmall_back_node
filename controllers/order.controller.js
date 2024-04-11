@@ -141,18 +141,19 @@ orderController.getOrderDetail = async(req, res) => {
 orderController.updateOrder = async(req, res) => {
     try {
         let _id = req.params.id;
-        const { orderItemIdList, orderStatusList } = req.body;
+        const { orderItemIdList, orderStatusList, orderStatusReasonList } = req.body;
         let order = {};
         const orderItemsMap = new Map();
         for(let i in orderItemIdList) {
             let id = `${orderItemIdList[i]}`;
             let status = `${orderStatusList[i]}`;
-            orderItemsMap.set(id, status); //Map만들기 key:id, value:status
+            let statusReason = `${orderStatusReasonList[i]}`;
+            orderItemsMap.set(id, {status, statusReason}); //Map만들기 key:id, value:status
         }
-        for(let [id, status] of orderItemsMap){
+        for(let [id, order] of orderItemsMap){
             order = await Order.updateOne(
                 { "data._id": _id, "data.items._id": id }, 
-                { $set: { "data.$[].items.$[item].status": status } },
+                { $set: { "data.$[].items.$[item].status": order.status, "data.$[].items.$[item].statusReason": order.statusReason } },
                 { arrayFilters: [{ "item._id": id }] }, //각 item의 status를 update하기 위해 해당 고유 식별자에 해당하는 item만 필터링
                 { new:true }
             );   

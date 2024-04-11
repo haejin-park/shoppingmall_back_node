@@ -19,8 +19,9 @@ const orderSchema = Schema(
                         productId: {type:mongoose.ObjectId, required:true, ref: Product},
                         size: {type:String, required:true},
                         qty: {type:Number, default:1, required:true},
-                        price: {type:Number, require:true},
-                        status: {type:String, default:"preparing"}
+                        price: {type:Number, required:true},
+                        status: {type:String, default:"상품 준비 중"},
+                        statusReason: {type:String, default: ""}
                     }
                 ]
             }

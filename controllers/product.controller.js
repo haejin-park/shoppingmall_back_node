@@ -18,8 +18,6 @@ productController.updateProduct = async(req, res) => {
     try {
         const _id = req.params.id
         const { sku,name, size, image, price, description, stock, category, status } = req.body;
-        const skuProduct = await Product.findOne({sku});
-        if(skuProduct) throw new Error('이미 존재하는 sku입니다. sku를 변경해주세요.')
         const product = await Product.findByIdAndUpdate(
             {_id}, 
             {sku, name, size, image, price, description, stock, category, status},

@@ -70,6 +70,14 @@ productController.getProductList = async(req, res) => {
             let purchaseOrderList = await Order.aggregate(orderOfPurchasePipeline);
             let totalProductList = await Product.find(condition);
             let orderProductIdList = totalProductList.length > 0 ? purchaseOrderList.map(item => item._id) : [];
+
+            //카테고리 상품리스트중에 purchaseOrderList가 있다면 해당 상품리스트 반환(순서 보장)
+            const categoryAndOrderProductMatchList = orderProductIdList.map(orderProductId => {
+                return totalProductList.find(product => product._id.toString() === orderProductId.toString());
+            }).filter(product => product !== undefined);
+            
+            // 없으면 안나오게
+            orderProductIdList = categoryAndOrderProductMatchList.length > 0? categoryAndOrderProductMatchList.map(item => item._id) : [];
             let noOrderProcutIdList = totalProductList.filter((product) => {
                 return !orderProductIdList.some((orderProductId) => {
                     return orderProductId.toString() === product._id.toString();

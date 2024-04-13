@@ -68,8 +68,8 @@ productController.getProductList = async(req, res) => {
             ];
 
             let purchaseOrderList = await Order.aggregate(orderOfPurchasePipeline);
-            let orderProductIdList = purchaseOrderList.map(item => item._id);
             let totalProductList = await Product.find(condition);
+            let orderProductIdList = totalProductList.length > 0 ? purchaseOrderList.map(item => item._id) : [];
             let noOrderProcutIdList = totalProductList.filter((product) => {
                 return !orderProductIdList.some((orderProductId) => {
                     return orderProductId.toString() === product._id.toString();

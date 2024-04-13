@@ -1,4 +1,5 @@
 const productController = {};
+const Order = require('../models/Order');
 const Product = require('../models/Product');
 productController.createProduct = async(req, res) => {
     try {
@@ -27,8 +28,6 @@ productController.updateProduct = async(req, res) => {
         await product.save();
         res.status(200).json({status: 'ok'});
     } catch (error) {
-        console.log('error',error);
-        console.log('error.message',error.message);
         res.status(400).json({status: 'fail', message: error.message});
     }
 };
@@ -37,27 +36,61 @@ productController.updateProduct = async(req, res) => {
   =>skipAmount보다 클 떄만 skip */
 productController.getProductList = async(req, res) => {
     try {
-        let {searchCategory, searchKeyword, currentPage,  sortBy} = req.query;
+        let {searchCategory, searchKeyword, currentPage, sortBy} = req.query;
         let condition = {isDeleted : false};
         if(searchCategory) condition.category = {$in: [searchCategory], $regex:searchCategory, $options:"i"}
         if(searchKeyword) condition.name = {$regex:searchKeyword, $options:"i"};
-        let query = Product.find(condition);
-        if(sortBy === 'latest') query = query.sort({createdAt: -1});
-        // // if(sortBy === 'orderOfPurchase') order페이지 완성 후 진행
-        let totalPageNum = 1;
-        if(currentPage){
-            const totalItemNum = await Product.find(condition).countDocuments();
-            const PAGE_SIZE = 8 
-            const skipAmount = (currentPage - 1)* PAGE_SIZE;
-            if(totalItemNum > skipAmount) {
-                query = query.skip(skipAmount).limit(PAGE_SIZE)
-            } else {
-                currentPage = 1
-            } 
-            totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
-
+        let productList = [];
+        const PAGE_SIZE = 8 
+        const totalItemNum = await Product.find(condition).countDocuments();
+        let totalPageNum = Math.ceil(totalItemNum / PAGE_SIZE);
+        const skipAmount = (currentPage - 1)* PAGE_SIZE;
+        if(currentPage && totalItemNum <= skipAmount) {
+            currentPage = 1
         }
-        let productList = await query.exec();
+        if(sortBy === 'latest') {
+            let totalProductList = Product.find(condition);
+            totalProductList = totalProductList.sort({createdAt: -1});
+            if(totalItemNum > skipAmount) {
+                totalProductList = totalProductList.skip(skipAmount).limit(PAGE_SIZE)
+            }
+            productList = await totalProductList.exec();
+        } else if(sortBy === 'orderOfPurchase') {
+            let orderOfPurchasePipeline = [
+                { $unwind: "$data" },
+                { $unwind: "$data.items" },
+                { $group: {
+                        _id: "$data.items.productId",
+                        purchaseCount: { $sum: "$data.items.qty" }
+                    }
+                },
+                { $sort: { purchaseCount: -1} },
+            ];
+
+            let purchaseOrderList = await Order.aggregate(orderOfPurchasePipeline);
+            let orderProductIdList = purchaseOrderList.map(item => item._id);
+            let totalProductList = await Product.find(condition);
+            let noOrderProcutIdList = totalProductList.filter((product) => {
+                return !orderProductIdList.some((orderProductId) => {
+                    return orderProductId.toString() === product._id.toString();
+                });
+            }).map(product => product._id);
+            //주문순 상품 아이디 리스트, 그 밖의 상품 아이디 리스트 합치기
+            let productIdList = [...orderProductIdList, ...noOrderProcutIdList]
+            //productIdList에 나열된 순서대로 결과를 정렬
+            let totalPipeline = [
+                { $match: { _id: { $in: productIdList } } }, // productIdList에 있는 상품만 필터링
+                { $addFields: { __order: { $indexOfArray: [productIdList, "$_id" ] } } }, // 각 문서에 순서 필드 추가
+                { $sort: { __order: 1 } } // 추가된 순서 필드를 기준으로 정렬
+                ];
+            
+            if(totalItemNum > skipAmount) {
+                totalPipeline.push({$skip:skipAmount});
+                totalPipeline.push({$limit:PAGE_SIZE});
+            } 
+            productList = await Product.aggregate(totalPipeline)
+        }
+
         res.status(200).json({status: 'ok', productList, totalPageNum, currentPage});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});

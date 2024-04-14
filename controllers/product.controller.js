@@ -55,7 +55,7 @@ productController.getProductList = async(req, res) => {
                 totalProductList = totalProductList.skip(skipAmount).limit(PAGE_SIZE)
             }
             productList = await totalProductList.exec();
-        } else if(sortBy === 'orderOfPurchase') {
+        } else if(sortBy === 'popularity') {
             let orderOfPurchasePipeline = [
                 { $unwind: "$data" },
                 { $unwind: "$data.items" },
@@ -98,7 +98,7 @@ productController.getProductList = async(req, res) => {
             } 
             productList = await Product.aggregate(totalPipeline)
         }
-
+        if(productList.length === 0) totalPageNum = 1;
         res.status(200).json({status: 'ok', productList, totalPageNum, currentPage});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});

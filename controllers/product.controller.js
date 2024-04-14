@@ -98,7 +98,7 @@ productController.getProductList = async(req, res) => {
             } 
             productList = await Product.aggregate(totalPipeline)
         }
-        if(productList.length === 0) totalPageNum = 1;
+        if(productList.length === 0) totalPageNum = 0;
         res.status(200).json({status: 'ok', productList, totalPageNum, currentPage});
     } catch (error) {
         res.status(400).json({status: 'fail', message: error.message});

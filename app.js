@@ -8,7 +8,7 @@ const indexRouter = require('./routes/index');
 
 const app = express();
 app.use(bodyParser.urlencoded({extended:false}));
-app.use(bodyParser.json()) //req.body가 객체로 인식이 된다
+app.use(bodyParser.json())
 app.use(cors());
 app.use('/api',indexRouter);
 

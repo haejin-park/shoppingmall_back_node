@@ -32,8 +32,6 @@ productController.updateProduct = async(req, res) => {
     }
 };
 
-/*블라우스 2개인데 2페이지에서 블라우스 검색 시 8개 skip되서 조회된 상품 없다고 나오는 문제 해결 
-  =>skipAmount보다 클 떄만 skip */
 productController.getProductList = async(req, res) => {
     try {
         let {searchCategory, searchKeyword, currentPage, sortBy} = req.query;
@@ -71,25 +69,21 @@ productController.getProductList = async(req, res) => {
             let totalProductList = await Product.find(condition);
             let orderProductIdList = totalProductList.length > 0 ? purchaseOrderList.map(item => item._id) : [];
 
-            //카테고리 상품리스트중에 purchaseOrderList가 있다면 해당 상품리스트 반환(순서 보장)
             const categoryAndOrderProductMatchList = orderProductIdList.map(orderProductId => {
                 return totalProductList.find(product => product._id.toString() === orderProductId.toString());
             }).filter(product => product !== undefined);
             
-            // 없으면 안나오게
             orderProductIdList = categoryAndOrderProductMatchList.length > 0? categoryAndOrderProductMatchList.map(item => item._id) : [];
             let noOrderProcutIdList = totalProductList.filter((product) => {
                 return !orderProductIdList.some((orderProductId) => {
                     return orderProductId.toString() === product._id.toString();
                 });
             }).map(product => product._id);
-            //주문순 상품 아이디 리스트, 그 밖의 상품 아이디 리스트 합치기
             let productIdList = [...orderProductIdList, ...noOrderProcutIdList]
-            //productIdList에 나열된 순서대로 결과를 정렬
             let totalPipeline = [
-                { $match: { _id: { $in: productIdList } } }, // productIdList에 있는 상품만 필터링
-                { $addFields: { __order: { $indexOfArray: [productIdList, "$_id" ] } } }, // 각 문서에 순서 필드 추가
-                { $sort: { __order: 1 } } // 추가된 순서 필드를 기준으로 정렬
+                { $match: { _id: { $in: productIdList } } },  
+                { $addFields: { __order: { $indexOfArray: [productIdList, "$_id" ] } } },  
+                { $sort: { __order: 1 } } 
                 ];
             
             if(totalItemNum > skipAmount) {
@@ -131,7 +125,7 @@ productController.checkStock = async(item) => {
 
 productController.checkItemListStock = async(orderList) => {
     let inSufficientStockItem = [];
-    const itemList = orderList.flatMap(data => data.items); //배열의 배열 구조라서 flatMap사용
+    const itemList = orderList.flatMap(data => data.items); 
     await Promise.all(itemList.map(async(item) => {           
         const stockCheck = await productController.checkStock(item);
         if(!stockCheck.isVerify) {

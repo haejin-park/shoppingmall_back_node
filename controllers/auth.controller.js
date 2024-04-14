@@ -22,17 +22,6 @@ authController.loginWithEmail = async(req, res) => {
     }
 }
 
-/*
-로그인
-1. front에서 받은 정보를 req.body에서 꺼낸다 
-2. db에 존재 하는지 확인
-3. 존재하지 않으면 에러
-4. 존재하면 비밀번호 비교 
-5. 비밀번호 일치하지 않으면 에러 
-6. 비밀번호 존재하면 res 유저 정보 반환
-7. try catch(error)
-*/ 
-
 authController.loginWithGoogle = async(req, res) => {
     try {
         const {googleToken} = req.body;
@@ -59,12 +48,6 @@ authController.loginWithGoogle = async(req, res) => {
     }
 }
 
-/*
-백엔드 로그인(토큰 정보로 백엔드에서 로그인해서 유저정보email 받아올 수 있음(google-auth-library))
-    1. 이미 로그인을 한 적이 있는 유저 ⇒ user, token 전달
-    2. 처음 로그인 시도를 한 유저 ⇒ 유저 정보 먼저 새로 생성(유저정보를DB에 저장. password는 랜덤한 값 암호화해서 넣어주기) ⇒ user, token 전달
-*/
-
 authController.authenticate = async(req, res, next) => {
     try {
         const tokenString = req.headers.authorization;
@@ -80,18 +63,6 @@ authController.authenticate = async(req, res, next) => {
     }
 };
 
-/*
-내 정보 조회시 필요한 미들웨어(userId)
-1. front에서 받은 정보를 req.headers에서 token을 꺼낸다
-2. 토큰 스트링이 없으면 에러
-3. 토큰 스트링이 있으면 'Bearer '을 ''로 변경하여 저장
-4. 저장된 토큰이 유효한지 확인해본다 jwt.verify(token, 비밀키, )
-5. 유효한 토큰이 아니면 에러처리
-6. 유효한 토큰이면 페이로드에서 아이디 가져와서 req.userId에
-7. next
-8. try catch(error)
-*/
-
 authController.checkAdminPermission = async (req,res,next) => {
     try {
         const {userId} = req;
@@ -103,8 +74,4 @@ authController.checkAdminPermission = async (req,res,next) => {
     }
 }
 
-/* 
-admin여부 확인시 필요한 미들웨어(level)
-userId로 user정보 가져와서 level에 따른 처리
-*/
 module.exports = authController;

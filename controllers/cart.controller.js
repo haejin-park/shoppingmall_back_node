@@ -37,19 +37,6 @@ cartController.addCartItem = async(req, res) => {
     }
 };
 
-/* 
-카트와 프로덕트 조인해서 갯수 구하기(populate쓰면 countDocument안되서 Aggregation로 변경)
-=> userId매치
-=> unwind로 items배열 풀어서 각 항목에 대해 lookup으로 product 조인
-=> proejct 필요한 정보만 조회
-=> items의 prodcutId와 products의 _id를 기준으로 조인
-=> unset 불필요한 정보 제거
-=> sort 상품을 넣은 일자가 최신순으로 되도록 정렬
-키워드 있을 때만 match할 조건 push로 추가
-전체 데이터수 => 배열복사 해서 조건 추가하여 카운트 파이프라인 별도로 만들어고 aggregate(count에 적은 itemsNum가 키값)
-한 페이지 보여줄 아이템 갯수, 생략할 갯수, 총 페이지 수
-한 화면에 8개씩 나오게 skipAmount보다 클 때만 skip, limit적용 후 aggregate
-*/
 cartController.getCartList = async(req, res) => {
     try {
         const { userId } = req;
@@ -127,8 +114,6 @@ cartController.deleteCartItem = async(req,res) => {
     }
 }
 
-//장바구니에서 바로 주문시엔 cartOrderStatus true, 상품 디테일 화면에서 바로 주문시엔 false
-//true일 떄만 삭제되게
 cartController.deleteOrderItems = async(req,res) => {
     try {
         const {userId, orderNum} = req;
@@ -138,7 +123,7 @@ cartController.deleteOrderItems = async(req,res) => {
             const cart = await Cart.findOne({userId});
             if(!cart) throw new Error('장바구니가 존재하지 않습니다.')
             let orderMap = new Map();
-            const itemList = orderList.flatMap(data => data.items);//배열의 배열 구조라서 flatMap사용
+            const itemList = orderList.flatMap(data => data.items);
 
             itemList.forEach(item => {
                 let key = `${item.productId}_${item.size}`;
@@ -186,29 +171,21 @@ cartController.updateCartItemQty = async(req, res) => {
             const itemIndex = cart.items.findIndex(item => item.productId.toString() === productId && item.size === size);
 
             if(selectedValue > 0 && initialValue === 0) {
-                // 선택한 옵션에만 수량이 있고 초기 옵션에는 수량이 없을 경우
                 if(itemIndex > -1) {
-                    //기존에 장바구니에 아이템이 있으면: 수량 추가
                     cart.items[itemIndex].qty += selectedValue;
                 } else {
-                    // 기존에 장바구니에 아이템이 없으면: 아이템 추가
                     updatedItems.push({productId, size, qty: selectedValue});
                 }
 
             } else if(selectedValue > 0 && selectedValue !== initialValue) {
-                // 선택한 옵션 수량이 있고, 선택 옵션과 초기 옵션 수량이 다른 경우: 수량 수정
                 if(itemIndex > -1) {
                     cart.items[itemIndex].qty = selectedValue;
                 }
             } else if(selectedValue === 0 && initialValue > 0) {
-                // 선택한 옵션에는 수량이 없고 초기 옵션에는 수량이 있을 경우: 삭제
                 cart.items = cart.items.filter(item => !(item.productId.toString() === productId && item.size === size));
             }
         }
-
-        // 업데이트된 아이템 추가
         cart.items = [...cart.items, ...updatedItems];
-
         await cart.save();
         let message = "장바구니 상품의 옵션이 변경되었습니다."
         return res.status(200).json({ status: 'ok', message, cartItemCount: cart.items.length });

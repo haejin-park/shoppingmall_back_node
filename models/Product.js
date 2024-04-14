@@ -20,7 +20,7 @@ productSchema.methods.toJSON = function() {
     const obj = this._doc
     delete obj.createdAt
     delete obj.updatedAt
-    delete obj.__v //버전정보
+    delete obj.__v 
     return obj
 }
 

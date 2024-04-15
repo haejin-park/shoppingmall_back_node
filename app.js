@@ -5,14 +5,21 @@ const cors = require('cors');
 require("dotenv").config();
 const indexRouter = require('./routes/index');
 
-
 const app = express();
+
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json())
-app.use(cors());
+const frontURL = process.env.NODE_ENV === 'production' 
+? `${process.env.FRONT_PROD_URL}` : `${process.env.FRONT_DEV_URL}`;
+app.use(cors({
+    origin: frontURL,
+    credentials: true,
+}));
 app.use('/api',indexRouter);
 
-const mongoURI = process.env.LOCAL_DB_ADDRESS;
+const mongoURI =  process.env.NODE_ENV === 'production' 
+? process.env.MONGODB_PROD_URI
+: process.env.MONGODB_DEV_URI;
 mongoose
     .connect(mongoURI)
     .then(() => console.log("mongoose connected"))

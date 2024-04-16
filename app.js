@@ -28,6 +28,6 @@ mongoose
     .then(() => console.log("mongoose connected"))
     .catch((error) => console.error(error));
 
-app.listen(5001, () => {
+app.listen(process.env.PORT || 5001, () => {
     console.log("server on");
 });

@@ -122,17 +122,6 @@ orderController.getOrderList = async(req, res) => {
     }
 };
 
-orderController.getOrderDetail = async(req, res) => {
-    try {
-        const id = req.params.id;
-        const order = await Order.findById(id);
-        if(!order) throw new Error('조회된 주문이 없습니다.')
-        res.status(200).json({status: 'ok', order});
-    } catch (error) {
-        res.status(400).json({status: 'fail', message: error.message});
-    }
-};
-
 orderController.updateOrder = async(req, res) => {
     try {
         let _id = req.params.id;
